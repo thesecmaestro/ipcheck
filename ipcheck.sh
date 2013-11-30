@@ -28,7 +28,9 @@
 # modifying ifup/ifdown or just pulling info out of a grep of ifconfig.
 # Look for a ppp0 or tun0 adapter address. 'ip monitor' may be of some
 # help as well. Be warned however that I've found that those methods
-# aren't 100% effective.
+# aren't 100% effective. This script does check the tunnel adapter if
+# found once per second for changes. Note that this is a lot; it can
+# be disabled by changing the TUNNEL_STATUS variable to zero.
 #
 # It probably seems paranoid, but just because you're paranoid doesn't
 # mean they're not really out to get you, so this script doesn't take
