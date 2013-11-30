@@ -64,7 +64,14 @@
 # http://whatismyip.akamai.com
 # http://myexternalip.com/raw
 # 
-# *Site may produce extra whitespace that could cause problems.
+# These site may change in the future, so it's a good idea to test
+# them occasionally from the command line:
+#
+# curl -s http://siteyouwanttotest
+#
+# If the site returns anything other than the IP address or spaces
+# before or after the IP address, there might be issues with
+# using it in this script.
 #
 # The following are sites that can return the IP address, however
 # they require some manipulation. If you don't understand these, just
@@ -106,24 +113,24 @@
 #
 # If you want to use the email notification feature, there are three
 # options:
-# 	1) The local mail system. To send mail externally
-# 	   the local MTA (such as sendmail) has to be configured to
-#	   forward mail to a SMTP server on the Internet, such as
-#	   your ISPs mail server. This is unencrypted.
+#     1) The local mail system. To send mail externally
+#        the local MTA (such as sendmail) has to be configured to
+#       forward mail to a SMTP server on the Internet, such as
+#       your ISPs mail server. This is unencrypted.
 #
-#	2) Gmail over TLS. You have to have a valid user/pass on
-#	   Gmail for this to work and have the following packages
-#	   installed:
-#	   perl-Net-SSLeay
-#	   perl-IO-Socket-SSL
-#	   perl-Net-LibIDN
-#	   sendEmail-1.56
+#    2) Gmail over TLS. You have to have a valid user/pass on
+#       Gmail for this to work and have the following packages
+#       installed:
+#       perl-Net-SSLeay
+#       perl-IO-Socket-SSL
+#       perl-Net-LibIDN
+#       sendEmail-1.56
 #
-#	3) Straight up SMTP email. If you have a SMTP server that will
-# 	   allow you to relay mail (such as your ISPs mail server)
-#	   you can use this. Just remember it isn't encrypted. It uses
-#	   the following packages:
-#	   sendEmail-1.56
+#    3) Straight up SMTP email. If you have a SMTP server that will
+#        allow you to relay mail (such as your ISPs mail server)
+#       you can use this. Just remember it isn't encrypted. It uses
+#       the following packages:
+#       sendEmail-1.56
 #
 # sendEmail-1.56 may not be found in stock repos. Search pbone.net if
 # 'yum install sendEmail-1.56' doesn't find it. Download it and install
@@ -189,8 +196,8 @@ REFRESH=2
 # Delay in case something is taking too long to die.
 KILLDELAY=10
 # Email subject line.
-SUBJECT="CHANGEME"	
-# To: address for the email notification.	
+SUBJECT="CHANGEME"    
+# To: address for the email notification.    
 TOADDR="CHANGEME"
 # From: address.
 FROMADDR="CHANGEME"
@@ -208,10 +215,10 @@ USETLS=yes
 SMTPSRV=
 
 # These variables shouldn't be changed.
-CURRENT_IP=0.0.0.0	# Placeholder for the current (hopefully VPN'd) IP address.
-COUNTER=0		# Public IP counter. Increments once per LOOPDELAY.
-LOOPSTART=1		# Placeholder for the throbber.
-THROBBER='/-\|'		# The throbber.
+CURRENT_IP=0.0.0.0    # Placeholder for the current (hopefully VPN'd) IP address.
+COUNTER=0        # Public IP counter. Increments once per LOOPDELAY.
+LOOPSTART=1        # Placeholder for the throbber.
+THROBBER='/-\|'        # The throbber.
 THROB=
 THR=
 
@@ -220,25 +227,25 @@ THR=
 # If you don't want the refresh and you've hardcoded your BAD_IP variable,
 # comment out all the lines starting at 'Start of the REFRESH counter increment'
 # down to 'End of the REFRESH counter increment'
-ip_is_bad() {	
-	[ "$(/usr/bin/curl -s "$IP_CHECK_URL")" = "$BAD_IP" ] && return 0 # THERE'S A MATCH!!
+ip_is_bad() {    
+    [ "$(/usr/bin/curl -s "$IP_CHECK_URL")" = "$BAD_IP" ] && return 0 # THERE'S A MATCH!!
 
-	let COUNTER++ # Start of the REFRESH counter increment
-		if [ "$COUNTER" = "$REFRESH" ]; then
-		echo " "
-		echo "Public IP refresh time reached!"
-		/bin/date
-		/usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another local box
-		export BAD_IP=`/bin/cat $BAD_IP_FILE` # This updates the BAD_IP variable mid-script
-		export BAD_IP=`echo -n $BAD_IP` # removes EOL
-				if [ -z "$BAD_IP" ]; then ninety_nine_problems
-				else echo "Update successful!"
-				fi
-		echo "Bad IP to avoid:" $BAD_IP
-		COUNTER=0
-		fi	# End of the REFRESH counter increment
+    let COUNTER++ # Start of the REFRESH counter increment
+        if [ "$COUNTER" = "$REFRESH" ]; then
+        echo " "
+        echo "Public IP refresh time reached!"
+        /bin/date
+        /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another local box
+        export BAD_IP=`/bin/cat $BAD_IP_FILE` # This updates the BAD_IP variable mid-script
+        export BAD_IP=`echo -n $BAD_IP` # removes EOL
+                if [ -z "$BAD_IP" ]; then ninety_nine_problems
+                else echo "Update successful!"
+                fi
+        echo "Bad IP to avoid:" $BAD_IP
+        COUNTER=0
+        fi    # End of the REFRESH counter increment
 
-	return 1
+    return 1
 }
 
 kaboom() { 
@@ -249,56 +256,56 @@ kaboom() {
 }
 
 the_end() {
-	echo "Looks like network stop was successful."
-	echo "Bye!"
-	/bin/date
-	exit 1
+    echo "Looks like network stop was successful."
+    echo "Bye!"
+    /bin/date
+    exit 1
 }
 
 net_stop() {
-#	Uncomment one of the below lines if you want to use email notifications (see comments at the top).
-#	echo $EMAILBODY | /bin/mail -s "$SUBJECT" "$TOADDR" & # Only works locally unless the system has MTA configured.
-#	/usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $GMAILSRV -o tls=$USETLS -xu $GMAILUSER -xp $GMAILPASS & # TLS email.
-#	/usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
-#	/usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
-	echo "Network stop being attempted!"
-	/sbin/service network stop # Stops the network. Change it to /etc/init.d/networking stop' for Debian style distros.
-	/bin/sleep $KILLDELAY
-	/bin/ping -c1 $TEST_HOST &>/dev/null # This pings the TEST_HOST defined at the top.
-	if [ $? -ne 0 ]; then the_end
-	else return 0
-	fi
+#    Uncomment one of the below lines if you want to use email notifications (see comments at the top).
+#    echo $EMAILBODY | /bin/mail -s "$SUBJECT" "$TOADDR" & # Only works locally unless the system has MTA configured.
+#    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $GMAILSRV -o tls=$USETLS -xu $GMAILUSER -xp $GMAILPASS & # TLS email.
+#    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
+#    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
+    echo "Network stop being attempted!"
+    /sbin/service network stop # Stops the network. Change it to /etc/init.d/networking stop' for Debian style distros.
+    /bin/sleep $KILLDELAY
+    /bin/ping -c1 $TEST_HOST &>/dev/null # This pings the TEST_HOST defined at the top.
+    if [ $? -ne 0 ]; then the_end
+    else return 0
+    fi
 }
 
 die_die_die() {
-    	echo "IP MATCH!!! - "$BAD_IP
-	/bin/date
-	net_stop
-	echo "Problem stopping the network!"
-	/usr/bin/logger Network shutdown attempt failed. Stopping Server.
+        echo "IP MATCH!!! - "$BAD_IP
+    /bin/date
+    net_stop
+    echo "Problem stopping the network!"
+    /usr/bin/logger Network shutdown attempt failed. Stopping Server.
     # STILL NOT DEAD!!
     kaboom
 }
 
 ninety_nine_problems() {
-	echo "IP address information could not be determined!"
-	echo "Size of the BAD_IP_FILE: "`stat -c %s "$BAD_IP_FILE"`" kilobytes" # Debugging for most common issue, zero byte file.
-	echo 
-	net_stop
-	echo "Problem stopping the network!"
-	/usr/bin/logger Network shutdown attempt failed. Stopping Server.
+    echo "IP address information could not be determined!"
+    echo "Size of the BAD_IP_FILE: "`stat -c %s "$BAD_IP_FILE"`" kilobytes" # Debugging for most common issue, zero byte file.
+    echo 
+    net_stop
+    echo "Problem stopping the network!"
+    /usr/bin/logger Network shutdown attempt failed. Stopping Server.
     # STILL NOT DEAD!!
     kaboom
 }
 
 throbber() {
-	for THROB in $(eval echo "{$LOOPSTART..$LOOPDELAY}") # Routine runs once per second up to the LOOPDELAY variable.
-	do
-		printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
-		sleep 1
-	done
-	return 0 
-}	
+    for THROB in $(eval echo "{$LOOPSTART..$LOOPDELAY}") # Routine runs once per second up to the LOOPDELAY variable.
+    do
+        printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
+        sleep 1
+    done
+    return 0 
+}    
 
 # start
 # If an argument is supplied, use as BAD_IP. CAUTION, this is overwritten when the IP is refreshed in the ip_is_bad function. Disable the refresh mechanism to change this behavior.
@@ -313,14 +320,14 @@ echo -n "Starting up ..."
 /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another LOCAL server.
 export BAD_IP=`/bin/cat $BAD_IP_FILE` # Gets the BAD_IP variable when initially ran.
 export BAD_IP=`echo -n $BAD_IP` # Remove EOL and makes sure a bad IP address was determined.
-	if [ -z "$BAD_IP" ]; then ninety_nine_problems
-	else echo "Bad IP file found!"
-	fi
+    if [ -z "$BAD_IP" ]; then ninety_nine_problems
+    else echo "Bad IP file found!"
+    fi
 export CURRENT_IP=`curl -s "$IP_CHECK_URL"` # Gets the current public IP info
-export CURRENT_IP=`echo -n $CURRENT_IP`	    # removes EOL
-	if [ -z "$CURRENT_IP" ]; then ninety_nine_problems
-	else echo "Current IP determined!"
-	fi
+export CURRENT_IP=`echo -n $CURRENT_IP`        # removes EOL
+    if [ -z "$CURRENT_IP" ]; then ninety_nine_problems
+    else echo "Current IP determined!"
+    fi
 
 echo "Bad IP to avoid:" $BAD_IP
 echo "Public IP in use:" $CURRENT_IP
@@ -328,31 +335,6 @@ echo "Time between checks:" $LOOPDELAY "seconds"
 echo "Time before Bad IP refresh:" "$(($REFRESH * $LOOPDELAY / 60))" "minutes"
 
 while true; do
-	ip_is_bad && die_die_die
-	throbber
+    ip_is_bad && die_die_die
+    throbber
 done
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
