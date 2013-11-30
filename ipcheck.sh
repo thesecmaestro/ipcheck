@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ipcheck.sh - a paranoid VPN helper script
-# Version 0.1.6 29NOV13
+# Version 0.1.8 30NOV13
 # Usage: ./ipcheck.sh [optional_bad_ip]
 # Author: Roger Smith (email below)
 #
@@ -339,7 +339,7 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
 [ "$1" ] && BAD_IP="$1"
 
 /usr/bin/clear
-echo "ipcheck.sh v0.1.6 29NOV13"
+echo "ipcheck.sh v0.1.8 30NOV13"
 echo "Press CTRL+C to exit."
 echo -n "Starting up ..."
 /bin/date
