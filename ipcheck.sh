@@ -220,6 +220,12 @@ SMTPSRV=
 # ONCE PER SECOND. This is a lot and it may cause some systems to behave irratically.
 # If you're not sure or not worried about it, set it zero to disable.
 TUNNEL_STATUS=1
+# Tunnel adapter name. While connected to your VPN, from a command line run the
+# ipconfig command. Look for an adapter (usually tun0 or ppp0 depending on the
+# VPN methodology). If necessary disconnect your VPN and run the ipconfig command
+# again, comparing the outputs. Put the name of it here.
+# Example: TUNNEL_NAME=tun0
+TUNNEL_NAME=CHANGEME
 
 # These variables shouldn't be changed.
 CURRENT_IP=0.0.0.0    # Placeholder for the current (hopefully VPN'd) IP address.
