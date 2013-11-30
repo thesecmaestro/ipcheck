@@ -325,7 +325,7 @@ first_adapter_check() { # This checks for the existance of an adapter based on T
     export LAST_TUNNEL_IP=$TUNNEL_IP
 }
 
-throbber() {    # Progress indicator and tunnel adapter checker. Note: This checks the tun0 adapter ONCE PER SECOND.
+throbber() {    # Progress indicator and tunnel adapter checker. Note: This checks the TUNNEL_NAME adapter ONCE PER SECOND.
     for THROB in $(eval echo "{$LOOPSTART..$LOOPDELAY}") # Routine runs once per second up to the LOOPDELAY variable.
     do
         printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
