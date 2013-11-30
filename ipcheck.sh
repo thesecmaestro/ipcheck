@@ -213,6 +213,10 @@ GMAILSRV=smtp.gmail.com:587
 USETLS=yes
 # Standard SMTP relay server that will accept mail from the local system
 SMTPSRV=
+# Tunnel override. The script by default checks the IP address of the tunnel adapter
+# ONCE PER SECOND. This is a lot and it may cause some systems to behave irratically.
+# If you're not sure or not worried about it, set it zero to disable.
+TUNNEL_STATUS=1
 
 # These variables shouldn't be changed.
 CURRENT_IP=0.0.0.0    # Placeholder for the current (hopefully VPN'd) IP address.
@@ -221,6 +225,9 @@ LOOPSTART=1        # Placeholder for the throbber.
 THROBBER='/-\|'        # The throbber.
 THROB=
 THR=
+TUNNEL_IP=0.0.0.0    # Placeholder for additional change detection on tunnel adapters
+LAST_TUNNEL_IP=0.0.0.0
+TUNNEL_FOUND=0
 
 # End of variables
 
@@ -266,8 +273,8 @@ net_stop() {
 #    Uncomment one of the below lines if you want to use email notifications (see comments at the top).
 #    echo $EMAILBODY | /bin/mail -s "$SUBJECT" "$TOADDR" & # Only works locally unless the system has MTA configured.
 #    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $GMAILSRV -o tls=$USETLS -xu $GMAILUSER -xp $GMAILPASS & # TLS email.
-#    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
-#    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
+    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
+    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     echo "Network stop being attempted!"
     /sbin/service network stop # Stops the network. Change it to /etc/init.d/networking stop' for Debian style distros.
     /bin/sleep $KILLDELAY
@@ -278,8 +285,7 @@ net_stop() {
 }
 
 die_die_die() {
-        echo "IP MATCH!!! - "$BAD_IP
-    /bin/date
+        /bin/date
     net_stop
     echo "Problem stopping the network!"
     /usr/bin/logger Network shutdown attempt failed. Stopping Server.
@@ -298,11 +304,32 @@ ninety_nine_problems() {
     kaboom
 }
 
-throbber() {
+first_adapter_check() { # This checks for the existance of a 'tun0' adapter. 
+    export TUNNEL_IP=`ifconfig tun0 | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
+    export TUNNEL_IP=`echo -n $TUNNEL_IP`
+        if [ -z "$TUNNEL_IP" ]; then
+        echo "No tunnel adapter found."
+        else
+        echo "VPN adapter found! Tunnel IP:" $TUNNEL_IP
+        export TUNNEL_FOUND=1
+        fi
+    export LAST_TUNNEL_IP=$TUNNEL_IP
+}
+
+throbber() {    # Progress indicator and tunnel adapter checker. Note: This checks the tun0 adapter ONCE PER SECOND.
     for THROB in $(eval echo "{$LOOPSTART..$LOOPDELAY}") # Routine runs once per second up to the LOOPDELAY variable.
     do
         printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
+        if [ $TUNNEL_FOUND = "1" ]; then
+        export TUNNEL_IP=`ifconfig tun0 | grep inet | awk '{ print $2 }' | sed 's/^.....//'` 
+        export TUNNEL_IP=`echo -n $TUNNEL_IP`
+        fi
+        if [ "$TUNNEL_IP" = "$LAST_TUNNEL_IP" ]; then 
         sleep 1
+        export LAST_TUNNEL_IP=$TUNNEL_IP
+        else echo "Tunnel adapter changed!"
+        die_die_die
+        fi
     done
     return 0 
 }    
@@ -323,10 +350,14 @@ export BAD_IP=`echo -n $BAD_IP` # Remove EOL and makes sure a bad IP address was
     if [ -z "$BAD_IP" ]; then ninety_nine_problems
     else echo "Bad IP file found!"
     fi
-export CURRENT_IP=`curl -s "$IP_CHECK_URL"` # Gets the current public IP info
-export CURRENT_IP=`echo -n $CURRENT_IP`        # removes EOL
+export CURRENT_IP=`curl -s "$IP_CHECK_URL"` # Gets the current public IP info.
+export CURRENT_IP=`echo -n $CURRENT_IP`        # Removes EOL.
     if [ -z "$CURRENT_IP" ]; then ninety_nine_problems
     else echo "Current IP determined!"
+    fi
+    
+    if [ "$TUNNEL_STATUS" = "1" ]; then
+    first_adapter_check
     fi
 
 echo "Bad IP to avoid:" $BAD_IP
