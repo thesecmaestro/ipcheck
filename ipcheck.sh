@@ -185,10 +185,10 @@ DIFF_HOST_BAD_IP_FILE=http://CHANGEME/CHANGEME
 BAD_IP_FILE=/CHANGEME/CHANGEME.TXT
 # Real public IP is provided from a different local system. Passing it an argument (ie, ipcheck.sh 8.8.8.8) overrides until refresh.
 # Example: BAD_IP=`/bin/cat $BAD_IP_FILE`
-BAD_IP=`/bin/cat CHANGEME`
+BAD_IP=`/bin/cat $BAD_IP_FILE`
 # Host on the local network that will respond to pings.
 # Example: TEST_HOST=192.168.1.1
-TEST_HOST=
+TEST_HOST=CHANGEME
 # This is where the current system's public IP comes from. I'd recommend cycling through the ones in the list above over time, the next version will do this automatically.
 # Example: IP_CHECK_URL=http://ifconfig.me
 IP_CHECK_URL="http://CHANGEME"
@@ -282,8 +282,8 @@ net_stop() {
 #    Uncomment one of the below lines if you want to use email notifications (see comments at the top).
 #    echo $EMAILBODY | /bin/mail -s "$SUBJECT" "$TOADDR" & # Only works locally unless the system has MTA configured.
 #    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $GMAILSRV -o tls=$USETLS -xu $GMAILUSER -xp $GMAILPASS & # TLS email.
-    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
-    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
+#    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
+#    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     echo "Network stop being attempted!"
     /sbin/service network stop # Stops the network. Change it to /etc/init.d/networking stop' for Debian style distros.
     /bin/sleep $KILLDELAY
