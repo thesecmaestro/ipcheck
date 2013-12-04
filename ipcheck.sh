@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ipcheck.sh - a paranoid VPN helper script
-# Version 0.1.8 30NOV13
+SVERSION="Version 0.1.9 3DEC13"
 # Usage: ./ipcheck.sh [optional_bad_ip]
 # Author: Roger Smith (email below)
 #
@@ -9,7 +9,13 @@
 # big block of commented text to meet your needs, they are well
 # commented.
 #
+# What this script is (and why):
+#
 # This script checks your local external IP (if behind a NAT device).
+# It does this by checking the system output (via ifconfig) as well
+# as a doing a real world test of the IP address. Multiple methods
+# are the only way to be 100% sure as I've seen bugs happen that could
+# compromise a users public IP address when using a single detection method.
 # I put it together to shut down a system if the VPN drops and the
 # real public IP address is exposed on the system and gives the option
 # of sending an email notification before taking the system off the
@@ -27,17 +33,6 @@
 # modifying ifup/ifdown or 'ip monitor' may be of some help as well.
 # Be warned however that I've found that using one method by itself
 # isn't 100% effective.
-#
-# This script checks the system output (via ifconfig) as well as a real
-# world test of the IP addresses. Multiple methods are the only way
-# to be 100% sure as I've seen bugs happen that could compromise a
-# users public IP address when using a single detection method.
-#
-# It probably seems paranoid, but just because you're paranoid doesn't
-# mean they're not really out to get you, so this script doesn't take
-# chances. If either the real public IP or the current public IP is
-# not found or they match it shuts down the network or the server if
-# necessary.
 # 
 # IP Address Refreshing:
 #
@@ -56,7 +51,8 @@
 # 
 # Don't set the timer below five minutes (unless you are using your own
 # public server such as a hosted website) as it's considered rude and 
-# will probably get you banned.
+# will probably get you banned. Plus, doing requests faster than that
+# tends to draw attention, and that's exactly what you don't want.
 #
 # http://ifconfig.me
 # http://ipecho.net/plain
@@ -314,7 +310,7 @@ ninety_nine_problems() {
 }
 
 first_adapter_check() { # This checks for the existance of an adapter based on TUNNEL_NAME. 
-    export TUNNEL_IP=`ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
+    export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
     export TUNNEL_IP=`echo -n $TUNNEL_IP`
         if [ -z "$TUNNEL_IP" ]; then
         echo "No tunnel adapter found."
@@ -330,7 +326,7 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
     do
         printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
         if [ $TUNNEL_FOUND = "1" ]; then
-        export TUNNEL_IP=`ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'` 
+        export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'` 
         export TUNNEL_IP=`echo -n $TUNNEL_IP`
         fi
         if [ "$TUNNEL_IP" = "$LAST_TUNNEL_IP" ]; then 
@@ -348,7 +344,7 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
 [ "$1" ] && BAD_IP="$1"
 
 /usr/bin/clear
-echo "ipcheck.sh v0.1.8 30NOV13"
+echo $SVERSION
 echo "Press CTRL+C to exit."
 echo -n "Starting up ..."
 /bin/date
