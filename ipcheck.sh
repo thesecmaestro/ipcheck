@@ -7,7 +7,8 @@ SVERSION="Version 0.1.9 3DEC13"
 #
 # TL;DR: If you know what you're doing just set the variables below the
 # big block of commented text to meet your needs, they are well
-# commented.
+# commented. Change anything that is currently set to CHANGEME and you
+# should be set.
 #
 # What this script is (and why):
 #
