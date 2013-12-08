@@ -297,6 +297,7 @@ net_stop() {
 #    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
 #    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     echo "Network stop being attempted!"
+    /bin/sleep $KILLDELAY
     /sbin/service network stop # Stops the network. Change it to '/etc/init.d/networking stop' for Debian style distros.
     /bin/sleep $KILLDELAY
     /bin/ping -c1 $TEST_HOST &>/dev/null # This pings the TEST_HOST defined at the top.
