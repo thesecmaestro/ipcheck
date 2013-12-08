@@ -315,18 +315,18 @@ die_die_die() {
 }
 
 hot_or_not() { # This function checks if the BAD_IP variable conforms to what an IP address should look like.
-    if [ `echo $BAD_IP | grep -o '\.' | wc -l` -ne 3 ]; then
+    if [ `echo $BAD_IP | /bin/grep -o '\.' | /usr/bin/wc -l` -ne 3 ]; then
         echo " "
             echo "BAD_IP isn't an IP Address (doesn't contain three periods)!"
         echo " "
             ninety_nine_problems
-    elif [ `echo $BAD_IP | tr '.' ' ' | wc -w` -ne 4 ]; then
+    elif [ `echo $BAD_IP | /usr/bin/tr '.' ' ' | /usr/bin/wc -w` -ne 4 ]; then
         echo " "
             echo "BAD_IP isn't an IP Address (doesn't contain four octets)!"
         echo " "
             ninety_nine_problems
     else
-            for OCTET in `echo $BAD_IP | tr '.' ' '`; do
+            for OCTET in `echo $BAD_IP | /usr/bin/tr '.' ' '`; do
                     if ! [[ $OCTET =~ ^[0-9]+$ ]]; then
             echo " "
                         echo "BAD_IP isn't an IP Address (octet '$OCTET' isn't a number)!"
