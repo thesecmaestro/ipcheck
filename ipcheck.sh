@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ipcheck.sh - a paranoid VPN helper script
-SVERSION="Version 0.1.9 3DEC13"
+SVERSION="Version 0.1.11 9DEC13"
 # Usage: ./ipcheck.sh [optional_bad_ip]
 # Author: Roger Smith (email below)
 #
@@ -12,9 +12,11 @@ SVERSION="Version 0.1.9 3DEC13"
 #
 # What this script is (and why):
 #
-# This script checks your local external IP (if behind a NAT device).
+# This script checks your local external IP (if behind a NAT device)
+# and compares it to what your real IP address is.
 # It does this by checking the system output (via ifconfig) as well
-# as a doing a real world test of the IP address. Multiple methods
+# as a doing a real world test of the IP address by retreiving the IP from
+# an external web server via curl. Multiple methods
 # are the only way to be 100% sure as I've seen bugs happen that could
 # compromise a users public IP address when using a single detection method.
 # I put it together to shut down a system if the VPN drops and the
@@ -159,7 +161,7 @@ SVERSION="Version 0.1.9 3DEC13"
 # 'oppressed', ie. North Korea, China, Afghanistan, most Middle Eastern
 # countries, etc. If you know of any please send them via email to:
 # rsmith(removethisandparentheses)317-removethisanddashestoo-in at gmail.com
-# Bug reports and suggestions are welcome.
+# Bug reports and suggestions are welcome, as well as translation assistance.
 # 
 # 
 # Send tips via Bitcoin to: 1DqkW7VeQ9fABNmNzaHqCmnV6jv9VHfdLJ
@@ -203,7 +205,7 @@ TOADDR="CHANGEME"
 FROMADDR="CHANGEME"
 # Email notification body.
 EMAILBODY="CHANGEME"
-# Gmail username, do not use the @gmail.com part. This can also be another mail server other than GMail that supports TLS.
+# GMail username, do not use the @gmail.com part. This can also be another mail server other than GMail that supports TLS.
 GMAILUSER=
 # Gmail password, or another TLS mail server account password.
 GMAILPASS=
@@ -223,6 +225,13 @@ TUNNEL_STATUS=1
 # again, comparing the outputs. Put the name of it here.
 # Example: TUNNEL_NAME=tun0
 TUNNEL_NAME=CHANGEME
+# Occasionally curl will not pull back the refreshed IP address due to network issues,
+# server problems, etc. resulting in a zero byte file. This variable represents the
+# number of times an IP refresh can fail to return an address, giving you the option
+# of allowing the script to have some 'slop' in it.
+# Set it to 1 for the paranoid (meaning it will halt the network on a single
+# failed IP refresh attempt).
+ZBYTE_TOLERANCE=3
 
 # These variables shouldn't be changed.
 CURRENT_IP=0.0.0.0    # Placeholder for the current (hopefully VPN'd) IP address.
@@ -234,6 +243,8 @@ THR=
 TUNNEL_IP=0.0.0.0    # Placeholder for additional change detection on tunnel adapters
 LAST_TUNNEL_IP=0.0.0.0
 TUNNEL_FOUND=0
+ZBYTE_COUNT=0
+OCTET=
 
 # End of variables
 
@@ -251,8 +262,12 @@ ip_is_bad() {
         /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another local box
         export BAD_IP=`/bin/cat $BAD_IP_FILE` # This updates the BAD_IP variable mid-script
         export BAD_IP=`echo -n $BAD_IP` # removes EOL
-                if [ -z "$BAD_IP" ]; then ninety_nine_problems
-                else echo "Update successful!"
+        hot_or_not # This function checks to see if the IP address retrieved is actually an IP address.
+                if [ -z "$BAD_IP" ]; then let ZBYTE_COUNT++
+                    zero_byte_file                
+                else
+                    echo "Update successful!"
+                    ZBYTE_COUNT=0
                 fi
         echo "Bad IP to avoid:" $BAD_IP
         COUNTER=0
@@ -299,6 +314,47 @@ die_die_die() {
     kaboom
 }
 
+hot_or_not() { # This function checks if the BAD_IP variable conforms to what an IP address should look like.
+    if [ `echo $BAD_IP | grep -o '\.' | wc -l` -ne 3 ]; then
+        echo " "
+            echo "BAD_IP isn't an IP Address (doesn't contain three periods)!"
+        echo " "
+            ninety_nine_problems
+    elif [ `echo $BAD_IP | tr '.' ' ' | wc -w` -ne 4 ]; then
+        echo " "
+            echo "BAD_IP isn't an IP Address (doesn't contain four octets)!"
+        echo " "
+            ninety_nine_problems
+    else
+            for OCTET in `echo $BAD_IP | tr '.' ' '`; do
+                    if ! [[ $OCTET =~ ^[0-9]+$ ]]; then
+            echo " "
+                        echo "BAD_IP isn't an IP Address (octet '$OCTET' isn't a number)!"
+            echo " "
+                        ninety_nine_problems;
+                elif [[ $OCTET -lt 0 || $OCTET -gt 255 ]]; then
+            echo " "
+                        echo "BAD_IP isn't an IP Address (octet '$OCTET' isn't in range of an IPv4 address)!"
+            echo " "
+                        ninety_nine_problems
+                fi
+            done
+    fi
+return 0;
+}
+
+zero_byte_file() {
+    echo "Warning: BAD_IP refresh failed (zero byte file was returned)."
+    echo "Number of times the refresh has failed:" $ZBYTE_COUNT
+    echo "Number of times it is allowed to fail:" $ZBYTE_TOLERANCE
+#    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
+    if [ "$ZBYTE_COUNT" = "$ZBYTE_TOLERANCE" ]; then
+        echo "Failure limit has been reached!"
+        ninety_nine_problems
+    else return 0
+    fi
+}
+
 ninety_nine_problems() {
     echo "IP address information could not be determined!"
     echo "Size of the BAD_IP_FILE: "`stat -c %s "$BAD_IP_FILE"`" kilobytes" # Debugging for most common issue, zero byte file.
@@ -310,8 +366,8 @@ ninety_nine_problems() {
     kaboom
 }
 
-first_adapter_check() { # This checks for the existance of an adapter based on TUNNEL_NAME. 
-    export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
+first_adapter_check() { # This checks for the existance of an adapter based on TUNNEL_NAME.
+    export TUNNEL_IP=`ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
     export TUNNEL_IP=`echo -n $TUNNEL_IP`
         if [ -z "$TUNNEL_IP" ]; then
         echo "No tunnel adapter found."
@@ -327,7 +383,7 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
     do
         printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
         if [ $TUNNEL_FOUND = "1" ]; then
-        export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'` 
+        export TUNNEL_IP=`ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'` 
         export TUNNEL_IP=`echo -n $TUNNEL_IP`
         fi
         if [ "$TUNNEL_IP" = "$LAST_TUNNEL_IP" ]; then 
@@ -353,6 +409,7 @@ echo -n "Starting up ..."
 /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another LOCAL server.
 export BAD_IP=`/bin/cat $BAD_IP_FILE` # Gets the BAD_IP variable when initially ran.
 export BAD_IP=`echo -n $BAD_IP` # Remove EOL and makes sure a bad IP address was determined.
+    hot_or_not
     if [ -z "$BAD_IP" ]; then ninety_nine_problems
     else echo "Bad IP file found!"
     fi
