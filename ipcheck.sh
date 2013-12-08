@@ -297,7 +297,7 @@ net_stop() {
 #    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
 #    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     echo "Network stop being attempted!"
-    /sbin/service network stop # Stops the network. Change it to /etc/init.d/networking stop' for Debian style distros.
+    /sbin/service network stop # Stops the network. Change it to '/etc/init.d/networking stop' for Debian style distros.
     /bin/sleep $KILLDELAY
     /bin/ping -c1 $TEST_HOST &>/dev/null # This pings the TEST_HOST defined at the top.
     if [ $? -ne 0 ]; then the_end
@@ -409,8 +409,8 @@ echo -n "Starting up ..."
 /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another LOCAL server.
 export BAD_IP=`/bin/cat $BAD_IP_FILE` # Gets the BAD_IP variable when initially ran.
 export BAD_IP=`echo -n $BAD_IP` # Remove EOL and makes sure a bad IP address was determined.
-    hot_or_not
-    if [ -z "$BAD_IP" ]; then ninety_nine_problems
+    hot_or_not # Checks to see if the BAD_IP variable looks like an IP address.
+    if [ -z "$BAD_IP" ]; then ninety_nine_problems # Checks to see if the BAD_IP variable is empty.
     else echo "Bad IP file found!"
     fi
 export CURRENT_IP=`curl -s "$IP_CHECK_URL"` # Gets the current public IP info.
