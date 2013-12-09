@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ipcheck.sh - a paranoid VPN helper script
-SVERSION="Version 0.1.11 9DEC13"
+SVERSION="Version 0.1.12 9DEC13"
 # Usage: ./ipcheck.sh [optional_bad_ip]
 # Author: Roger Smith (email below)
 #
@@ -256,21 +256,16 @@ ip_is_bad() {
 
     let COUNTER++ # Start of the REFRESH counter increment
         if [ "$COUNTER" = "$REFRESH" ]; then
-        echo " "
-        echo "Public IP refresh time reached!"
-        /bin/date
-        /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another local box
-        export BAD_IP=`/bin/cat $BAD_IP_FILE` # This updates the BAD_IP variable mid-script
-        export BAD_IP=`echo -n $BAD_IP` # removes EOL
-        hot_or_not # This function checks to see if the IP address retrieved is actually an IP address.
-                if [ -z "$BAD_IP" ]; then let ZBYTE_COUNT++
-                    zero_byte_file                
-                else
-                    echo "Update successful!"
-                    ZBYTE_COUNT=0
-                fi
-        echo "Bad IP to avoid:" $BAD_IP
-        COUNTER=0
+            echo " "
+            echo "Public IP refresh time reached!"
+            /bin/date
+            /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another local box
+            export BAD_IP=`/bin/cat $BAD_IP_FILE` # This updates the BAD_IP variable mid-script
+            export BAD_IP=`echo -n $BAD_IP` # removes EOL
+            hot_or_not # This function checks to see if the IP address retrieved is actually an IP address.
+            echo "Total number of failed refreshes:" $ZBYTE_TOTAL
+            echo "Bad IP to avoid:" $BAD_IP
+            COUNTER=0
         fi    # End of the REFRESH counter increment
 
     return 1
@@ -295,14 +290,14 @@ net_stop() {
 #    echo $EMAILBODY | /bin/mail -s "$SUBJECT" "$TOADDR" & # Only works locally unless the system has MTA configured.
 #    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $GMAILSRV -o tls=$USETLS -xu $GMAILUSER -xp $GMAILPASS & # TLS email.
 #    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
-#    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
+    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     echo "Network stop being attempted!"
     /bin/sleep $KILLDELAY
-    /sbin/service network stop # Stops the network. Change it to '/etc/init.d/networking stop' for Debian style distros.
+    /sbin/service network stop # Stops the network. Change it to /etc/init.d/networking stop' for Debian style distros.
     /bin/sleep $KILLDELAY
     /bin/ping -c1 $TEST_HOST &>/dev/null # This pings the TEST_HOST defined at the top.
     if [ $? -ne 0 ]; then the_end
-    else return 0
+        else return 0
     fi
 }
 
@@ -316,18 +311,24 @@ die_die_die() {
 }
 
 hot_or_not() { # This function checks if the BAD_IP variable conforms to what an IP address should look like.
-    if [ `echo $BAD_IP | /bin/grep -o '\.' | /usr/bin/wc -l` -ne 3 ]; then
+    if [ -z "$BAD_IP" ]; then let ZBYTE_COUNT++
+            zero_byte_file
+            return 0
+        else            
+            ZBYTE_COUNT=0
+    fi
+    if [ `echo $BAD_IP | grep -o '\.' | wc -l` -ne 3 ]; then
         echo " "
             echo "BAD_IP isn't an IP Address (doesn't contain three periods)!"
         echo " "
             ninety_nine_problems
-    elif [ `echo $BAD_IP | /usr/bin/tr '.' ' ' | /usr/bin/wc -w` -ne 4 ]; then
+    elif [ `echo $BAD_IP | tr '.' ' ' | wc -w` -ne 4 ]; then
         echo " "
             echo "BAD_IP isn't an IP Address (doesn't contain four octets)!"
         echo " "
             ninety_nine_problems
     else
-            for OCTET in `echo $BAD_IP | /usr/bin/tr '.' ' '`; do
+            for OCTET in `echo $BAD_IP | tr '.' ' '`; do
                     if ! [[ $OCTET =~ ^[0-9]+$ ]]; then
             echo " "
                         echo "BAD_IP isn't an IP Address (octet '$OCTET' isn't a number)!"
@@ -341,14 +342,15 @@ hot_or_not() { # This function checks if the BAD_IP variable conforms to what an
                 fi
             done
     fi
-return 0;
+return 0
 }
 
 zero_byte_file() {
+    let ZBYTE_TOTAL++ # Debugging counter.
     echo "Warning: BAD_IP refresh failed (zero byte file was returned)."
     echo "Number of times the refresh has failed:" $ZBYTE_COUNT
     echo "Number of times it is allowed to fail:" $ZBYTE_TOLERANCE
-#    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
+    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     if [ "$ZBYTE_COUNT" = "$ZBYTE_TOLERANCE" ]; then
         echo "Failure limit has been reached!"
         ninety_nine_problems
@@ -410,10 +412,7 @@ echo -n "Starting up ..."
 /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another LOCAL server.
 export BAD_IP=`/bin/cat $BAD_IP_FILE` # Gets the BAD_IP variable when initially ran.
 export BAD_IP=`echo -n $BAD_IP` # Remove EOL and makes sure a bad IP address was determined.
-    hot_or_not # Checks to see if the BAD_IP variable looks like an IP address.
-    if [ -z "$BAD_IP" ]; then ninety_nine_problems # Checks to see if the BAD_IP variable is empty.
-    else echo "Bad IP file found!"
-    fi
+hot_or_not
 export CURRENT_IP=`curl -s "$IP_CHECK_URL"` # Gets the current public IP info.
 export CURRENT_IP=`echo -n $CURRENT_IP`        # Removes EOL.
     if [ -z "$CURRENT_IP" ]; then ninety_nine_problems
