@@ -290,7 +290,7 @@ net_stop() {
 #    echo $EMAILBODY | /bin/mail -s "$SUBJECT" "$TOADDR" & # Only works locally unless the system has MTA configured.
 #    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $GMAILSRV -o tls=$USETLS -xu $GMAILUSER -xp $GMAILPASS & # TLS email.
 #    /usr/bin/sendEmail -f $FROMADDR -t $TOADDR -u "$SUBJECT" -m "$EMAILBODY" -s $SMTPSRV & # Sends SMTP mail to a relay.
-    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
+#    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     echo "Network stop being attempted!"
     /bin/sleep $KILLDELAY
     /sbin/service network stop # Stops the network. Change it to /etc/init.d/networking stop' for Debian style distros.
@@ -302,7 +302,7 @@ net_stop() {
 }
 
 die_die_die() {
-        /bin/date
+    /bin/date
     net_stop
     echo "Problem stopping the network!"
     /usr/bin/logger Network shutdown attempt failed. Stopping Server.
@@ -310,25 +310,26 @@ die_die_die() {
     kaboom
 }
 
-hot_or_not() { # This function checks if the BAD_IP variable conforms to what an IP address should look like.
+# This function checks if the BAD_IP variable conforms to what an IP address should look like.
+hot_or_not() {
     if [ -z "$BAD_IP" ]; then let ZBYTE_COUNT++
             zero_byte_file
             return 0
         else            
             ZBYTE_COUNT=0
     fi
-    if [ `echo $BAD_IP | grep -o '\.' | wc -l` -ne 3 ]; then
+    if [ `echo $BAD_IP | /bin/grep -o '\.' | /usr/bin/wc -l` -ne 3 ]; then
         echo " "
             echo "BAD_IP isn't an IP Address (doesn't contain three periods)!"
         echo " "
             ninety_nine_problems
-    elif [ `echo $BAD_IP | tr '.' ' ' | wc -w` -ne 4 ]; then
+    elif [ `echo $BAD_IP | /usr/bin/tr '.' ' ' | /usr/bin/wc -w` -ne 4 ]; then
         echo " "
             echo "BAD_IP isn't an IP Address (doesn't contain four octets)!"
         echo " "
             ninety_nine_problems
     else
-            for OCTET in `echo $BAD_IP | tr '.' ' '`; do
+            for OCTET in `echo $BAD_IP | /usr/bin/tr '.' ' '`; do
                     if ! [[ $OCTET =~ ^[0-9]+$ ]]; then
             echo " "
                         echo "BAD_IP isn't an IP Address (octet '$OCTET' isn't a number)!"
@@ -350,7 +351,7 @@ zero_byte_file() {
     echo "Warning: BAD_IP refresh failed (zero byte file was returned)."
     echo "Number of times the refresh has failed:" $ZBYTE_COUNT
     echo "Number of times it is allowed to fail:" $ZBYTE_TOLERANCE
-    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
+#    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     if [ "$ZBYTE_COUNT" = "$ZBYTE_TOLERANCE" ]; then
         echo "Failure limit has been reached!"
         ninety_nine_problems
