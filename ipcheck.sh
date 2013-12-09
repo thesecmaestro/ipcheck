@@ -271,30 +271,28 @@ OCTET=
 
 # End of variables
 
-# If you don't want the refresh and you've hardcoded your BAD_IP variable,
-# comment out all the lines starting at 'Start of the REFRESH counter increment'
-# down to 'End of the REFRESH counter increment'
 ip_is_bad() {    
     [ "$(/usr/bin/curl -s "$IP_CHECK_URL")" = "$BAD_IP" ] && return 0 # THERE'S A MATCH!!
-
-    let COUNTER++ # Start of the REFRESH counter increment
+        echo "BAD_IP:"$BAD_IP "did not match!"
+        /bin/date
+        let COUNTER++ # Start of the REFRESH counter increment
         if [ "$COUNTER" = "$REFRESH" ]; then
+        if [ "$REFRESH_STATUS" = "1" ]; then
             echo " "
             echo "Public IP refresh time reached!"
-            /bin/date
             /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another local box
             export BAD_IP=`/bin/cat $BAD_IP_FILE` # This updates the BAD_IP variable mid-script
             export BAD_IP=`echo -n $BAD_IP` # removes EOL
             hot_or_not # This function checks to see if the IP address retrieved is actually an IP address.
-#            echo "Total number of failed refreshes:" $ZBYTE_TOTAL # Uncomment to see number of failed refreshes.
+#                      echo "Total number of failed refreshes:" $ZBYTE_TOTAL # Uncomment to see number of failed refreshes.
             echo "Bad IP to avoid:" $BAD_IP
             COUNTER=0
-        fi    # End of the REFRESH counter increment
-
+        fi # End of the REFRESH counter increment
+        fi
     return 1
 }
 
-kaboom() { 
+kaboom() {
     echo "KABOOM!"
     /sbin/shutdown -h now
     /sbin/poweroff
@@ -386,7 +384,7 @@ zero_byte_file() {
 ninety_nine_problems() {
     echo "IP address information could not be determined!"
     echo "Size of the BAD_IP_FILE: "`stat -c %s "$BAD_IP_FILE"`" kilobytes" # Debugging for most common issue, zero byte file.
-    echo 
+    echo
     net_stop
     echo "Problem stopping the network!"
     /usr/bin/logger Network shutdown attempt failed. Stopping Server.
@@ -411,17 +409,17 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
     do
         printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
         if [ $TUNNEL_FOUND = "1" ]; then
-        export TUNNEL_IP=`ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'` 
+        export TUNNEL_IP=`ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
         export TUNNEL_IP=`echo -n $TUNNEL_IP`
         fi
-        if [ "$TUNNEL_IP" = "$LAST_TUNNEL_IP" ]; then 
+        if [ "$TUNNEL_IP" = "$LAST_TUNNEL_IP" ]; then
         sleep 1
         export LAST_TUNNEL_IP=$TUNNEL_IP
         else echo "Tunnel adapter changed!"
         die_die_die
         fi
     done
-    return 0 
+    return 0
 }    
 
 # start
@@ -429,29 +427,47 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
 [ "$1" ] && BAD_IP="$1"
 
 /usr/bin/clear
+rm -f $BAD_IP_FILE
+export BAD_IP=$BAD_IP
 echo $SVERSION
 echo "Press CTRL+C to exit."
 echo -n "Starting up ..."
 /bin/date
 
-/usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets public IP from another LOCAL server.
-export BAD_IP=`/bin/cat $BAD_IP_FILE` # Gets the BAD_IP variable when initially ran.
-export BAD_IP=`echo -n $BAD_IP` # Remove EOL and makes sure a bad IP address was determined.
-hot_or_not
 export CURRENT_IP=`curl -s "$IP_CHECK_URL"` # Gets the current public IP info.
 export CURRENT_IP=`echo -n $CURRENT_IP`        # Removes EOL.
-    if [ -z "$CURRENT_IP" ]; then ninety_nine_problems
-    else echo "Current IP determined!"
+
+    if [ "$REFRESH_STATUS" = "1" ]; then
+        echo "IP Refresh is ENABLED."
+        /usr/bin/curl -s $DIFF_HOST_BAD_IP_FILE > $BAD_IP_FILE # Gets bad (real) IP from another LOCAL server.
+        export BAD_IP=`/bin/cat $BAD_IP_FILE` # Gets the BAD_IP variable when initially ran.
+        export BAD_IP=`echo -n $BAD_IP` # Remove EOL and makes sure a bad IP address was determined.
+        hot_or_not
+    else
+        echo "IP Refresh is DISABLED."
+        echo "The BAD_IP information will NOT be updated."
+        if [ -z "$BAD_IP" ]; then echo "No BAD_IP information was given. Exiting."
+        exit 0
+        fi
     fi
-    
+
+    if [ -z "$CURRENT_IP" ]; then
+        echo "Current (VPN'd) IP information was not found!"
+        ninety_nine_problems
+        else echo "Current (VPN'd) IP determined!"
+    fi
+   
     if [ "$TUNNEL_STATUS" = "1" ]; then
-    first_adapter_check
+        first_adapter_check
     fi
 
 echo "Bad IP to avoid:" $BAD_IP
 echo "Public IP in use:" $CURRENT_IP
-echo "Time between checks:" $LOOPDELAY "seconds"
-echo "Time before Bad IP refresh:" "$(($REFRESH * $LOOPDELAY / 60))" "minutes"
+
+    if [ "$REFRESH_STATUS" = "1" ]; then
+        echo "Time between checks:" $LOOPDELAY "seconds"
+        echo "Time before Bad IP refresh:" "$(($REFRESH * $LOOPDELAY / 60))" "minutes"
+    fi
 
 while true; do
     ip_is_bad && die_die_die
