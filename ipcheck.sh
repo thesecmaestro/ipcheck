@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ipcheck.sh - a paranoid VPN helper script
-SVERSION="Version 0.1.11 9DEC13"
+SVERSION="Version 0.1.12 9DEC13"
 # Usage: ./ipcheck.sh [optional_bad_ip]
 # Author: Roger Smith (email below)
 #
@@ -284,7 +284,7 @@ ip_is_bad() {
             export BAD_IP=`/bin/cat $BAD_IP_FILE` # This updates the BAD_IP variable mid-script
             export BAD_IP=`echo -n $BAD_IP` # removes EOL
             hot_or_not # This function checks to see if the IP address retrieved is actually an IP address.
-#                      echo "Total number of failed refreshes:" $ZBYTE_TOTAL # Uncomment to see number of failed refreshes.
+#            echo "Total number of failed refreshes:" $ZBYTE_TOTAL # Uncomment to see number of failed refreshes.
             echo "Bad IP to avoid:" $BAD_IP
             COUNTER=0
         fi # End of the REFRESH counter increment
@@ -423,11 +423,12 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
 }    
 
 # start
-# If an argument is supplied, use as BAD_IP. CAUTION, this is overwritten when the IP is refreshed in the ip_is_bad function. Disable the refresh mechanism to change this behavior.
+# If an argument is supplied, use as BAD_IP. Overwritten if REFRESH_STATUS
+# is set to enabled. Disable the refresh mechanism to change this behavior.
 [ "$1" ] && BAD_IP="$1"
 
 /usr/bin/clear
-rm -f $BAD_IP_FILE
+/bin/rm -f $BAD_IP_FILE
 export BAD_IP=$BAD_IP
 echo $SVERSION
 echo "Press CTRL+C to exit."
