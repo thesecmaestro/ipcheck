@@ -273,7 +273,7 @@ OCTET=
 
 ip_is_bad() {    
     [ "$(/usr/bin/curl -s "$IP_CHECK_URL")" = "$BAD_IP" ] && return 0 # THERE'S A MATCH!!
-        echo "BAD_IP:"$BAD_IP "did not match!"
+#        echo "BAD_IP:"$BAD_IP "did not match! Yay!" # Uncomment if you want verification of each time the IPs don't match.
         /bin/date
         let COUNTER++ # Start of the REFRESH counter increment
         if [ "$COUNTER" = "$REFRESH" ]; then
@@ -286,6 +286,8 @@ ip_is_bad() {
             hot_or_not # This function checks to see if the IP address retrieved is actually an IP address.
 #            echo "Total number of failed refreshes:" $ZBYTE_TOTAL # Uncomment to see number of failed refreshes.
             echo "Bad IP to avoid:" $BAD_IP
+            COUNTER=0
+            else
             COUNTER=0
         fi # End of the REFRESH counter increment
         fi
