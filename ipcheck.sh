@@ -41,7 +41,9 @@ SVERSION="Version 0.1.12 9DEC13"
 #
 # This script will update both the 'bad' (ie. non VPN'd) IP address as
 # well as the 'current' (ie. VPN'd) address on a schedule based on what
-# you've set the appropriate variables to.
+# you've set the appropriate variables to (see below to disable this
+# feature if you don't require it).
+#
 # You'll notice it refreshes the real public IP address
 # information from another server on the same LOCAL network over http.
 # It does this so the VPN doesn't have to be dropped to find out if
@@ -146,7 +148,7 @@ SVERSION="Version 0.1.12 9DEC13"
 # here: http://caspian.dotconf.net/menu/Software/SendEmail/
 #
 # If you know what you're doing you can use this mechanism to send TLS
-# encrypted email to a server that isn't Gmail, just use the GMAIL*
+# encrypted email to a server that isn't GMail, just use the GMAIL*
 # variables.
 #
 # Note: Please don't depend on this script with your life. It can be useful
@@ -273,7 +275,7 @@ OCTET=
 
 ip_is_bad() {    
     [ "$(/usr/bin/curl -s "$IP_CHECK_URL")" = "$BAD_IP" ] && return 0 # THERE'S A MATCH!!
-#        echo "BAD_IP:"$BAD_IP "did not match! Yay!" # Uncomment if you want verification of each time the IPs don't match.
+#        echo "BAD_IP:"$BAD_IP "did not match! Yay!" # Uncomment for visual verification each time IPs don't match.
         /bin/date
         let COUNTER++ # Start of the REFRESH counter increment
         if [ "$COUNTER" = "$REFRESH" ]; then
