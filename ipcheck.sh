@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ipcheck.sh - a paranoid VPN helper script
-SVERSION="Version 0.1.12 9DEC13"
+SVERSION="Version 0.1.11 9DEC13"
 # Usage: ./ipcheck.sh [optional_bad_ip]
 # Author: Roger Smith (email below)
 #
@@ -23,7 +23,7 @@ SVERSION="Version 0.1.12 9DEC13"
 # real public IP address is exposed on the system and gives the option
 # of sending an email notification before taking the system off the
 # network or shutting it down entirely if something goes wrong.
-# 
+#
 # This was designed for a CentOS 6 system. Note that most of the
 # executables have the full path specified; if used on a different
 # distro, ensure the paths match. This was designed to be ran as root,
@@ -36,13 +36,13 @@ SVERSION="Version 0.1.12 9DEC13"
 # modifying ifup/ifdown or 'ip monitor' may be of some help as well.
 # Be warned however that I've found that using one method by itself
 # isn't 100% effective.
-# 
+#
 # IP Address Refreshing:
 #
-# If you feel you need less protection (for example, for many people
-# it's uncommon for their external IP to change) you can comment it out
-# (it's well commented) and change the BAD_IP variable to whatever your
-# public IP is. You'll notice it refreshes the real public IP address
+# This script will update both the 'bad' (ie. non VPN'd) IP address as
+# well as the 'current' (ie. VPN'd) address on a schedule based on what
+# you've set the appropriate variables to.
+# You'll notice it refreshes the real public IP address
 # information from another server on the same LOCAL network over http.
 # It does this so the VPN doesn't have to be dropped to find out if
 # there's been a change to the public IP information. The other server
@@ -51,9 +51,9 @@ SVERSION="Version 0.1.12 9DEC13"
 # This could be replaced with FTP/SSH/SMB commands or whatever.
 # The following sites are useful for only returning the IP address and
 # at the time of this writing (Nov. 2013) work with this script.
-# 
+#
 # Don't set the timer below five minutes (unless you are using your own
-# public server such as a hosted website) as it's considered rude and 
+# public server such as a hosted website) as it's considered rude and
 # will probably get you banned. Plus, doing requests faster than that
 # tends to draw attention, and that's exactly what you don't want.
 #
@@ -65,7 +65,7 @@ SVERSION="Version 0.1.12 9DEC13"
 # http://ip.appspot.com
 # http://whatismyip.akamai.com
 # http://myexternalip.com/raw
-# 
+#
 # These site may change in the future, so it's a good idea to test
 # them occasionally from the command line:
 #
@@ -77,14 +77,14 @@ SVERSION="Version 0.1.12 9DEC13"
 #
 # The following are sites that can return the IP address, however
 # they require some manipulation. If you don't understand these, just
-# ignore them and only use the ones listed previously. 
-# 
+# ignore them and only use the ones listed previously.
+#
 # dig +short myip.opendns.com @resolver1.opendns.com
 # curl -s http://vigeek.net/extip.php | sed 's/^ *//g' | sed 's/ *$//g'
 # curl -s http://www.ip-details.com | grep "Your IP Address :" | awk '{ print $6 }' | sed "s/.....$//"
 # curl -s http://checkip.dyndns.org | sed -e 's/[^[:digit:]| .]//g' | sed 's/^ *//g'
 # curl -s http://ipogre.com/linux.php | sed -e 's/.*IP Address: //' -e 's/<.*$//'
-# 
+#
 # These are just some sites I found by poking around some forums. I'm
 # sure there are more and you may even want to use your own server
 # (see below) you have hosted elsewhere. I am not the owner of any of
@@ -106,6 +106,11 @@ SVERSION="Version 0.1.12 9DEC13"
 # If everything is in place, you should just see the public IP of the
 # client you are browsing from. If the server is on the same local network
 # as the client, it will just show the local LAN address.
+#
+# If you feel you need less protection (for example, for many people
+# it's uncommon for their external IP to change) set the REFRESH_STATUS
+# variable to zero and change the BAD_IP variable to whatever your
+# public IP is. 
 #
 # Email Notification:
 #
@@ -155,15 +160,15 @@ SVERSION="Version 0.1.12 9DEC13"
 #
 # The next version will incorporate round robin selection of the
 # IP address returning websites and a few other goodies.
-# 
+#
 # One last thing: I'm especially interested in finding sites that will
 # return IP information that are hosted in countries that are considered
 # 'oppressed', ie. North Korea, China, Afghanistan, most Middle Eastern
 # countries, etc. If you know of any please send them via email to:
 # rsmith(removethisandparentheses)317-removethisanddashestoo-in at gmail.com
 # Bug reports and suggestions are welcome, as well as translation assistance.
-# 
-# 
+#
+#
 # Send tips via Bitcoin to: 1DqkW7VeQ9fABNmNzaHqCmnV6jv9VHfdLJ
 # Send tips via Litecoin to: LhTvCL3QrEwxUgCpspTvD1jLZVkzR2ZB2v
 #
@@ -176,24 +181,41 @@ SVERSION="Version 0.1.12 9DEC13"
 #
 # Replace any variables that are labeled CHANGEME with your information.
 #
-# Pull public IP info from another server ON THE SAME LOCAL NETWORK. Using a server that is not on your own local network will most likely not give you the needed information.
+# This variable enables (1) or disables (0) the IP address refresh mechanism.
+# If this is disabled change the BAD_IP variable to whatever your real public
+# IP address is or pass it as an argument (ie. ipcheck.sh 8.8.8.8).
+# Example: REFRESH_STATUS=1
+REFRESH_STATUS=1
+# Pull public IP info from another server ON THE SAME LOCAL NETWORK. Using a server
+# that is not on your own local network will most likely not give you the needed
+# information.
 # Example: DIFF_HOST_BAD_IP_FILE=http://192.168.1.1/external_ip.txt
 DIFF_HOST_BAD_IP_FILE=http://CHANGEME/CHANGEME
-# Location the real public IP address information should be copied to locally. The account running the script will require read/write/delete permissons. Remember, Linux is case sensitive.
+# Location the real public IP address information should be copied to locally.
+# The account running the script will require read/write/delete permissons.
+# Remember, Linux is case sensitive.
 # Example: BAD_IP_FILE=/tmp/external_ip.txt
 BAD_IP_FILE=/CHANGEME/CHANGEME.TXT
-# Real public IP is provided from a different local system. Passing it an argument (ie, ipcheck.sh 8.8.8.8) overrides until refresh.
+# Real public IP is provided from a different local system. Passing it an argument
+# (ie, ipcheck.sh 8.8.8.8) overrides until refresh (if enabled).
 # Example: BAD_IP=`/bin/cat $BAD_IP_FILE`
 BAD_IP=`/bin/cat $BAD_IP_FILE`
 # Host on the local network that will respond to pings.
 # Example: TEST_HOST=192.168.1.1
 TEST_HOST=CHANGEME
-# This is where the current system's public IP comes from. I'd recommend cycling through the ones in the list above over time, the next version will do this automatically.
+# This is where the current system's public IP comes from. I'd recommend cycling
+# through the ones in the list above over time, a future version will do this
+# automatically.
 # Example: IP_CHECK_URL=http://ifconfig.me
 IP_CHECK_URL="http://CHANGEME"
-# Seconds between getting the system's IP from a public website. Setting it too low will overload the site and probably get you BANNED or worse (it attracts attention)! Don't set this too low unless you really know what you're doing. Keep in mind the more often it refreshes, the more likely something like intermittent network problems will cause things to fail.
+# Seconds between getting the system's IP from a public website. Setting it too
+# low will overload the site and probably get you BANNED or worse (it attracts
+# attention)! Don't set this too low unless you really know what you're doing.
+# Keep in mind the more often it refreshes, the more likely something such as
+# intermittent network problems will cause things to fail.
 LOOPDELAY=600
-# Number of passes the script makes before it gets the system's public IP address from the IP_CHECK_URL. REFRESH * LOOPDELAY / 60 = Minutes till BAD_IP update.
+# Number of passes the script makes before it gets the system's public IP address
+# from the IP_CHECK_URL. REFRESH * LOOPDELAY / 60 = Minutes till BAD_IP update.
 REFRESH=2
 # Delay in case something is taking too long to die.
 KILLDELAY=10
@@ -205,15 +227,16 @@ TOADDR="CHANGEME"
 FROMADDR="CHANGEME"
 # Email notification body.
 EMAILBODY="CHANGEME"
-# GMail username, do not use the @gmail.com part. This can also be another mail server other than GMail that supports TLS.
+# GMail username, do not use the @gmail.com part. This can also be another mail
+# server other than GMail that supports TLS.
 GMAILUSER=
-# Gmail password, or another TLS mail server account password.
+# GMail password, or another TLS mail server account password.
 GMAILPASS=
-# Gmail server and port, or another TLS server and port.
+# GMail server and port, or another TLS server and port.
 GMAILSRV=smtp.gmail.com:587
 # Use TLS encryption
 USETLS=yes
-# Standard SMTP relay server that will accept mail from the local system
+# Standard SMTP relay server that will accept mail from the local system.
 SMTPSRV=
 # Tunnel override. The script by default checks the IP address of the tunnel adapter
 # ONCE PER SECOND. It may cause some older systems to behave irratically.
