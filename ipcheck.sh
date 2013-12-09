@@ -216,7 +216,7 @@ USETLS=yes
 # Standard SMTP relay server that will accept mail from the local system
 SMTPSRV=
 # Tunnel override. The script by default checks the IP address of the tunnel adapter
-# ONCE PER SECOND. This is a lot and it may cause some systems to behave irratically.
+# ONCE PER SECOND. It may cause some older systems to behave irratically.
 # If you're not sure or not worried about it, set it zero to disable.
 TUNNEL_STATUS=1
 # Tunnel adapter name. While connected to your VPN, from a command line run the
@@ -263,7 +263,7 @@ ip_is_bad() {
             export BAD_IP=`/bin/cat $BAD_IP_FILE` # This updates the BAD_IP variable mid-script
             export BAD_IP=`echo -n $BAD_IP` # removes EOL
             hot_or_not # This function checks to see if the IP address retrieved is actually an IP address.
-            echo "Total number of failed refreshes:" $ZBYTE_TOTAL
+#            echo "Total number of failed refreshes:" $ZBYTE_TOTAL # Uncomment to see number of failed refreshes.
             echo "Bad IP to avoid:" $BAD_IP
             COUNTER=0
         fi    # End of the REFRESH counter increment
@@ -343,6 +343,7 @@ hot_or_not() {
                 fi
             done
     fi
+echo "Update successful!"
 return 0
 }
 
