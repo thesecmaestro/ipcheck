@@ -375,7 +375,7 @@ return 0
 zero_byte_file() {
     let ZBYTE_TOTAL++ # Debugging counter.
     echo "Warning: BAD_IP refresh failed (zero byte file was returned)."
-    echo "Number of times the refresh has failed:" $ZBYTE_COUNT
+    echo "Number of times the refresh has failed since it was successful:" $ZBYTE_COUNT
     echo "Number of times it is allowed to fail:" $ZBYTE_TOLERANCE
 #    /usr/bin/paplay /usr/share/sounds/KDE-Sys-App-Error-Serious-Very.ogg & # Uncomment for alert sound (uses pulseaudio).
     if [ "$ZBYTE_COUNT" = "$ZBYTE_TOLERANCE" ]; then
