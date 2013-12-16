@@ -19,10 +19,10 @@ SVERSION="Version 0.1.12 9DEC13"
 # an external web server via curl. Multiple methods
 # are the only way to be 100% sure as I've seen bugs happen that could
 # compromise a users public IP address when using a single detection method.
-# I put it together to shut down a system if the VPN drops and the
-# real public IP address is exposed on the system and gives the option
-# of sending an email notification before taking the system off the
-# network or shutting it down entirely if something goes wrong.
+# I put it together to shut down the network on a system if the VPN drops
+# and the real public IP address is exposed on the system. It also gives
+# the option of sending an email notification before taking the system 
+# off the network or shutting it down entirely if something goes wrong.
 #
 # This was designed for a CentOS 6 system. Note that most of the
 # executables have the full path specified; if used on a different
@@ -127,8 +127,8 @@ SVERSION="Version 0.1.12 9DEC13"
 #       forward mail to a SMTP server on the Internet, such as
 #       your ISPs mail server. This is unencrypted.
 #
-#    2) Gmail over TLS. You have to have a valid user/pass on
-#       Gmail for this to work and have the following packages
+#    2) GMail over TLS. You have to have a valid user/pass on
+#       GMail for this to work and have the following packages
 #       installed:
 #       perl-Net-SSLeay
 #       perl-IO-Socket-SSL
