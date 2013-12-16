@@ -402,7 +402,7 @@ ninety_nine_problems() {
 }
 
 first_adapter_check() { # This checks for the existance of an adapter based on TUNNEL_NAME.
-    export TUNNEL_IP=`ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
+    export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
     export TUNNEL_IP=`echo -n $TUNNEL_IP`
         if [ -z "$TUNNEL_IP" ]; then
         echo "No tunnel adapter found."
@@ -418,7 +418,7 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
     do
         printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
         if [ $TUNNEL_FOUND = "1" ]; then
-        export TUNNEL_IP=`ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
+        export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
         export TUNNEL_IP=`echo -n $TUNNEL_IP`
         fi
         if [ "$TUNNEL_IP" = "$LAST_TUNNEL_IP" ]; then
