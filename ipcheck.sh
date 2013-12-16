@@ -37,6 +37,10 @@ SVERSION="Version 0.1.12 9DEC13"
 # Be warned however that I've found that using one method by itself
 # isn't 100% effective.
 #
+# ipcheck.sh is in active development so feature requests are welcome.
+# Upcoming features will include additional methods of checking IP
+# address status, logging options, and additional notification options.
+#
 # IP Address Refreshing:
 #
 # This script will update both the 'bad' (ie. non VPN'd) IP address as
