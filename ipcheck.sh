@@ -39,7 +39,8 @@ SVERSION="Version 0.1.12 9DEC13"
 #
 # ipcheck.sh is in active development so feature requests are welcome.
 # Upcoming features will include additional methods of checking IP
-# address status, logging options, and additional notification options.
+# address status, logging options, NFtables routing options,
+# and additional notification options.
 #
 # IP Address Refreshing:
 #
