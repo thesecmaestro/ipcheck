@@ -95,9 +95,10 @@ SVERSION="Version 0.1.12 9DEC13"
 # These are just some sites I found by poking around some forums. I'm
 # sure there are more and you may even want to use your own server
 # (see below) you have hosted elsewhere. I am not the owner of any of
-# these sites and I have no idea who is. If you are the owner and do
-# not want these listed here please email me with verifiable proof
-# that you do indeed own the domain and would like it removed.
+# these sites and I have no idea who is (whois, get it?). If you are 
+# the owner and do not want these listed here please email me with
+# verifiable proof that you do indeed own the domain and would like it
+# removed.
 #
 # If you'd like to run your own IP returning web service, here is an
 # example.
@@ -402,7 +403,7 @@ ninety_nine_problems() {
 }
 
 first_adapter_check() { # This checks for the existance of an adapter based on TUNNEL_NAME.
-    export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
+    export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | /bin/grep inet | /usr/bin/awk '{ print $2 }' | /bin/sed 's/^.....//'`
     export TUNNEL_IP=`echo -n $TUNNEL_IP`
         if [ -z "$TUNNEL_IP" ]; then
         echo "No tunnel adapter found."
@@ -418,7 +419,7 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
     do
         printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
         if [ $TUNNEL_FOUND = "1" ]; then
-        export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | awk '{ print $2 }' | sed 's/^.....//'`
+        export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | /usr/bin/awk '{ print $2 }' | /bin/sed 's/^.....//'`
         export TUNNEL_IP=`echo -n $TUNNEL_IP`
         fi
         if [ "$TUNNEL_IP" = "$LAST_TUNNEL_IP" ]; then
@@ -444,7 +445,7 @@ echo "Press CTRL+C to exit."
 echo -n "Starting up ..."
 /bin/date
 
-export CURRENT_IP=`curl -s "$IP_CHECK_URL"` # Gets the current public IP info.
+export CURRENT_IP=`/usr/bin/curl -s "$IP_CHECK_URL"` # Gets the current public IP info.
 export CURRENT_IP=`echo -n $CURRENT_IP`        # Removes EOL.
 
     if [ "$REFRESH_STATUS" = "1" ]; then
