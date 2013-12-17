@@ -393,7 +393,7 @@ zero_byte_file() {
 
 ninety_nine_problems() {
     echo "IP address information could not be determined!"
-    echo "Size of the BAD_IP_FILE: "`stat -c %s "$BAD_IP_FILE"`" kilobytes" # Debugging for most common issue, zero byte file.
+    echo "Size of the BAD_IP_FILE: "`/usr/bin/stat -c %s "$BAD_IP_FILE"`" kilobytes" # Debugging for most common issue, zero byte file.
     echo
     net_stop
     echo "Problem stopping the network!"
@@ -419,7 +419,7 @@ throbber() {    # Progress indicator and tunnel adapter checker. Note: This chec
     do
         printf "\b\b\b\b [${THROBBER:THR++%${#THROBBER}:1}]" # Progress indicator to make things a bit more snazzy.
         if [ $TUNNEL_FOUND = "1" ]; then
-        export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | grep inet | /usr/bin/awk '{ print $2 }' | /bin/sed 's/^.....//'`
+        export TUNNEL_IP=`/sbin/ifconfig $TUNNEL_NAME | /bin/grep inet | /usr/bin/awk '{ print $2 }' | /bin/sed 's/^.....//'`
         export TUNNEL_IP=`echo -n $TUNNEL_IP`
         fi
         if [ "$TUNNEL_IP" = "$LAST_TUNNEL_IP" ]; then
