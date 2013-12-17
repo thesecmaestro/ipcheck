@@ -162,7 +162,7 @@ SVERSION="Version 0.1.12 9DEC13"
 # No warranties, not liable, not fit for any purpose other than my own, etc.
 # Use it at your own risk.
 #
-# For license purposes it's GPLv3. No verbage from the comments of this script
+# For license purposes it's GPLv3. No verbiage from the comments of this script
 # may be removed, however they may be added to as long as the changes are
 # published.
 #
