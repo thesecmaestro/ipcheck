@@ -12,13 +12,13 @@ SVERSION="Version 0.1.12 9DEC13"
 #
 # What this script is (and why):
 #
-# This script checks your local external IP (if behind a NAT device)
-# and compares it to what your real IP address is.
-# It does this by checking the system output (via ifconfig) as well
-# as a doing a real world test of the IP address by retreiving the IP from
-# an external web server via curl. Multiple methods
-# are the only way to be 100% sure as I've seen bugs happen that could
-# compromise a users public IP address when using a single detection method.
+# This script checks the VPN tunnel adapter (usually tun0 or ppp0) once
+# per second to watch for any changes, and checks your local external IP 
+# (if behind a NAT device) and compares it to what your real IP address is. 
+# It does this by doing a real world test of the IP address by retreiving 
+# the IP from an external web server via curl. Multiple methods are the 
+# only way to be 100% sure as I've seen bugs happen that could compromise 
+# a users public IP address when using a single detection method.
 # I put it together to shut down the network on a system if the VPN drops
 # and the real public IP address is exposed on the system. It also gives
 # the option of sending an email notification before taking the system 
