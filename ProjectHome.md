@@ -1,0 +1,1 @@
+ipcheck.sh is a script I've been working on as a companion for network VPN scripts and the like that periodically tests the connection to ensure the non-VPN'd IP address isn't accidentally exposed due to a problem with the VPN connection. The script has quite a few options to meet a variety of needs.
